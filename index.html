@@ -4,35 +4,20 @@
     <meta charset="UTF-8">
     <title>dearbebe</title>
     <style>
-        /* Makes the entire screen black */
-        body { 
-            background-color: #000; 
-            margin: 0; 
-            height: 100vh; 
-            width: 100vw; 
-            overflow: hidden; 
-            cursor: crosshair; 
-        }
+        body { background: #000; margin: 0; height: 100vh; overflow: hidden; }
     </style>
 </head>
 <body>
 
-    <audio id="vibe" src="boaf.mp3" loop></audio>
-
     <script>
-        const song = document.getElementById('vibe');
-        let isPlaying = false;
+        // We create the audio entirely in the background
+        const audio = new Audio("boaf.mp3");
+        audio.loop = true;
 
-        // One simple function: if it's not playing, start it.
-        function start() {
-            if (!isPlaying) {
-                song.play();
-                isPlaying = true;
-            }
-        }
-
-        // Click anywhere to trigger the sound
-        window.addEventListener('click', start);
+        window.onclick = function() {
+            console.log("Click detected. Starting audio...");
+            audio.play();
+        };
     </script>
 </body>
 </html>
