@@ -34,7 +34,7 @@
             transition: opacity 5s ease;
         }
 
-        #landing, .reveal {
+        #music-picker, #landing, .reveal {
             height: 100vh;
             width: 100%;
             display: flex;
@@ -43,13 +43,29 @@
             justify-content: center;
             position: absolute;
             top: 0; left: 0;
-            transition: all 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 2s cubic-bezier(0.4, 0, 0.2, 1);
             opacity: 0;
             pointer-events: none;
             padding: 20px;
         }
 
-        #landing { opacity: 1; pointer-events: all; z-index: 20; transition: opacity 1s ease; }
+        /* Initial Screen */
+        #music-picker { opacity: 1; pointer-events: all; z-index: 30; }
+
+        .picker-title {
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            margin-bottom: 40px;
+            color: var(--text-dim);
+            text-align: center;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
 
         .action-btn {
             background: none;
@@ -62,7 +78,6 @@
             backdrop-filter: blur(15px);
             border-radius: 100px;
             transition: all 1s ease;
-            margin-top: 30px;
             opacity: 0;
             transform: translateY(20px);
         }
@@ -148,6 +163,14 @@
 
     <canvas id="heart-canvas"></canvas>
 
+    <div id="music-picker">
+        <p class="picker-title">Which song do you like better?</p>
+        <div class="btn-group">
+            <button class="action-btn show" onclick="selectMusic('boaf.mp3')">Birds of a Feather - Billie Eilish</button>
+            <button class="action-btn show" onclick="selectMusic('flylove.mp3')">Fly Love - Jamie Foxx</button>
+        </div>
+    </div>
+
     <div id="landing">
         <button class="action-btn show" onclick="startExperience()">PRESS</button>
     </div>
@@ -180,12 +203,25 @@
 
     <script>
         let audioCtx;
+        let selectedTrack = "";
         const canvas = document.getElementById('heart-canvas');
         const ctx = canvas.getContext('2d');
         let hearts = [];
 
+        function selectMusic(track) {
+            selectedTrack = track;
+            const picker = document.getElementById('music-picker');
+            picker.style.opacity = '0';
+            picker.style.pointerEvents = 'none';
+            
+            setTimeout(() => {
+                picker.style.display = 'none';
+                document.getElementById('landing').classList.add('active');
+            }, 1000);
+        }
+
         function startExperience() {
-            const audio = new Audio("boaf.mp3");
+            const audio = new Audio(selectedTrack);
             audio.loop = true;
             audio.playbackRate = 0.8;
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -238,16 +274,13 @@
 
         function setupNoButton() {
             const noBtn = document.getElementById('no-btn');
-            
             const moveButton = () => {
                 const x = Math.random() * (window.innerWidth - noBtn.offsetWidth);
                 const y = Math.random() * (window.innerHeight - noBtn.offsetHeight);
-                
                 noBtn.style.position = 'fixed';
                 noBtn.style.left = `${x}px`;
                 noBtn.style.top = `${y}px`;
             };
-
             noBtn.addEventListener('mouseenter', moveButton);
             noBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -266,7 +299,6 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             canvas.style.opacity = '1';
-            
             for(let i = 0; i < 50; i++) {
                 hearts.push({
                     x: Math.random() * canvas.width,
