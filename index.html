@@ -20,7 +20,7 @@
             background-color: var(--bg);
             color: var(--text-main);
             font-family: 'Inter', -apple-system, system-ui, sans-serif;
-            overflow: hidden; /* Prevents accidental scrolling */
+            overflow: hidden; 
             line-height: 1.6;
             perspective: 1000px;
         }
@@ -44,15 +44,15 @@
             justify-content: center;
             position: absolute;
             top: 0; left: 0;
-            transition: all 2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 2.5s cubic-bezier(0.4, 0, 0.2, 1);
             opacity: 0;
             pointer-events: none;
             padding: 20px;
         }
 
-        #landing { opacity: 1; pointer-events: all; }
+        /* Ensure landing is visible at start */
+        #landing { opacity: 1; pointer-events: all; z-index: 20; }
 
-        /* The Button Style */
         .action-btn {
             background: none;
             border: 1px solid var(--border);
@@ -63,7 +63,7 @@
             cursor: pointer;
             backdrop-filter: blur(15px);
             border-radius: 100px;
-            transition: all 0.8s ease;
+            transition: all 1s ease;
             margin-top: 30px;
             opacity: 0;
             transform: translateY(20px);
@@ -79,7 +79,6 @@
             box-shadow: 0 0 20px rgba(255,255,255,0.1);
         }
 
-        /* Modern Photo Cards */
         .photo-card {
             width: 100%;
             max-width: 380px;
@@ -90,12 +89,12 @@
             overflow: hidden;
             margin-bottom: 30px;
             box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-            transform: scale(0.9);
-            transition: all 2s ease;
+            transform: scale(0.9) translateY(40px);
+            transition: all 2.5s ease;
         }
 
         .active .photo-card {
-            transform: scale(1);
+            transform: scale(1) translateY(0);
             box-shadow: 0 30px 60px rgba(0,0,0,1), 0 0 40px var(--glow);
         }
 
@@ -111,7 +110,11 @@
             text-transform: uppercase;
             color: var(--text-dim);
             text-align: center;
+            opacity: 0;
+            transition: opacity 2s ease 1s;
         }
+
+        .active .caption { opacity: 1; }
 
         .final-question {
             font-size: 1.8rem;
@@ -120,9 +123,9 @@
             text-align: center;
         }
 
-        /* Slide Transition Classes */
-        .active { opacity: 1; pointer-events: all; z-index: 5; }
-        .exit { opacity: 0; transform: translateY(-50px) scale(1.05); }
+        /* Navigation Classes */
+        .active { opacity: 1; pointer-events: all; z-index: 10; }
+        .exit { opacity: 0; transform: translateY(-80px) scale(1.1); pointer-events: none; }
 
     </style>
 </head>
@@ -179,25 +182,30 @@
             gain.connect(audioCtx.destination);
             audio.play();
 
-            // UI Transition
-            document.getElementById('landing').classList.add('exit');
+            // Clear Landing and Start Visuals
+            const landing = document.getElementById('landing');
+            landing.classList.remove('active');
+            landing.classList.add('exit');
+            
+            // This prevents the "Press" button from lingering
+            setTimeout(() => { landing.style.display = 'none'; }, 2000);
+
             canvas.style.opacity = '1';
             initHearts();
             animate();
 
-            setTimeout(() => {
-                showMoment(1);
-            }, 1500);
+            setTimeout(() => { showMoment(1); }, 1000);
         }
 
         function showMoment(n) {
             const current = document.getElementById(`moment${n}`);
             current.classList.add('active');
             
-            // Show the button after a delay so she looks at the photo first
+            // Slow fade in for the button (4 second delay for maximum emotional impact)
             setTimeout(() => {
-                current.querySelector('.action-btn')?.classList.add('show');
-            }, 3000);
+                const btn = current.querySelector('.action-btn');
+                if(btn) btn.classList.add('show');
+            }, 4000);
         }
 
         function nextMoment(n) {
@@ -207,20 +215,20 @@
             
             setTimeout(() => {
                 showMoment(n + 1);
-            }, 1000);
+            }, 1500);
         }
 
-        // --- Slow, Defined Heart Logic ---
+        // --- Slow, Beautiful Hearts ---
         function initHearts() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            for(let i = 0; i < 40; i++) {
+            for(let i = 0; i < 45; i++) {
                 hearts.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height + canvas.height,
-                    size: Math.random() * 12 + 8,
-                    speed: Math.random() * 0.4 + 0.2, // Much slower
-                    opacity: Math.random() * 0.2 + 0.1
+                    size: Math.random() * 10 + 6,
+                    speed: Math.random() * 0.3 + 0.15, // Extremely slow drift
+                    opacity: Math.random() * 0.25 + 0.05
                 });
             }
         }
@@ -230,10 +238,16 @@
             ctx.translate(x, y);
             ctx.beginPath();
             ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-            // Classic Heart Shape
-            ctx.moveTo(0, 0);
-            ctx.bezierCurveTo(-size / 2, -size / 2, -size, size / 4, 0, size);
-            ctx.bezierCurveTo(size, size / 4, size / 2, -size / 2, 0, 0);
+            // Smoother heart path
+            ctx.moveTo(0, size / 4);
+            ctx.quadraticCurveTo(0, 0, size / 2, 0);
+            ctx.quadraticCurveTo(size, 0, size, size / 2);
+            ctx.quadraticCurveTo(size, size * 0.75, size / 2, size);
+            ctx.lineTo(0, size * 1.4);
+            ctx.lineTo(-size / 2, size);
+            ctx.quadraticCurveTo(-size, size * 0.75, -size, size / 2);
+            ctx.quadraticCurveTo(-size, 0, -size / 2, 0);
+            ctx.quadraticCurveTo(0, 0, 0, size / 4);
             ctx.fill();
             ctx.restore();
         }
@@ -242,11 +256,16 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             hearts.forEach(h => {
                 h.y -= h.speed;
-                if(h.y < -50) h.y = canvas.height + 50;
+                if(h.y < -100) h.y = canvas.height + 100;
                 drawHeart(h.x, h.y, h.size, h.opacity);
             });
             requestAnimationFrame(animate);
         }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
     </script>
 </body>
 </html>
