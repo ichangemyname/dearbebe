@@ -8,8 +8,8 @@
         :root {
             --bg: #000000;
             --card-bg: rgba(255, 255, 255, 0.02);
-            --border: rgba(255, 255, 255, 0.08);
-            --glow: rgba(255, 255, 255, 0.5);
+            --border: rgba(255, 255, 255, 0.05);
+            --glow: rgba(255, 255, 255, 0.3);
             --text-main: #ffffff;
             --text-dim: #666666;
         }
@@ -22,6 +22,8 @@
             font-family: 'Inter', -apple-system, system-ui, sans-serif;
             overflow-x: hidden;
             line-height: 1.6;
+            /* Added perspective for the scroll animation */
+            perspective: 1000px;
         }
 
         #heart-canvas {
@@ -74,11 +76,12 @@
             transition: opacity 3s ease;
         }
 
+        /* Enhanced Reveal Animation with Perspective Tilt */
         .reveal {
             opacity: 0;
-            transform: translateY(60px);
-            transition: all 2s cubic-bezier(0.2, 0.8, 0.2, 1);
-            margin-bottom: 250px;
+            transform: translateY(100px) rotateX(10deg) scale(0.95);
+            transition: all 2.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            margin-bottom: 300px;
             width: 100%;
             max-width: 400px;
             text-align: center;
@@ -86,25 +89,32 @@
 
         .reveal.active {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) rotateX(0deg) scale(1);
         }
 
+        /* Softer Photo Frames */
         .photo-card {
             width: 100%;
             aspect-ratio: 4/5;
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 4px; /* Sharper, more modern edges */
+            border-radius: 30px; /* Softer, curved corners */
             overflow: hidden;
             margin-bottom: 40px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            /* Soft glow and faded shadow instead of bright outline */
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.03);
+            transition: box-shadow 1s ease;
+        }
+
+        .reveal.active .photo-card {
+            box-shadow: 0 30px 60px rgba(0,0,0,1), 0 0 30px var(--glow);
         }
 
         .photo-card img {
             width: 100%; height: 100%;
             object-fit: cover;
-            filter: grayscale(100%) brightness(0.8);
-            transition: filter 1.5s ease;
+            filter: grayscale(100%) brightness(0.7);
+            transition: filter 2s ease;
         }
 
         .reveal.active .photo-card img {
@@ -112,11 +122,16 @@
         }
 
         .caption {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 300;
             color: var(--text-dim);
-            letter-spacing: 0.2em;
+            letter-spacing: 0.3em;
             text-transform: uppercase;
+            transition: color 1.5s ease;
+        }
+
+        .reveal.active .caption {
+            color: var(--text-main);
         }
 
         .final-question {
@@ -153,6 +168,13 @@
         </div>
 
         <div class="reveal">
+            <div class="photo-card">
+                <img src="photo3.jpg" alt="">
+            </div>
+            <p class="caption">Everything in between</p>
+        </div>
+
+        <div class="reveal">
             <h1 class="final-question">Be mine?</h1>
         </div>
     </div>
@@ -168,16 +190,15 @@
             if (isStarted) return;
             isStarted = true;
 
-            // --- THE MUFFLED AUDIO ENGINE ---
             const audio = new Audio("boaf.mp3");
             audio.loop = true;
-            audio.playbackRate = 0.82; // Slowed effect
+            audio.playbackRate = 0.82;
 
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const source = audioCtx.createMediaElementSource(audio);
             const filter = audioCtx.createBiquadFilter();
             filter.type = 'lowpass';
-            filter.frequency.value = 250; // Muffled effect
+            filter.frequency.value = 250;
 
             const gain = audioCtx.createGain();
             gain.gain.value = 0.5;
@@ -188,7 +209,6 @@
 
             audio.play();
 
-            // --- UI TRANSITION ---
             document.getElementById('landing').style.opacity = '0';
             
             setTimeout(() => {
@@ -206,7 +226,6 @@
             }, 1500);
         }
 
-        // --- Hearts Logic ---
         function initHearts() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -245,12 +264,12 @@
             requestAnimationFrame(animate);
         }
 
-        // --- Scroll Reveal ---
         function revealOnScroll() {
             const reveals = document.querySelectorAll('.reveal');
             reveals.forEach(el => {
                 const rect = el.getBoundingClientRect();
-                if (rect.top < window.innerHeight - 100) {
+                // Trigger earlier for a smoother flow
+                if (rect.top < window.innerHeight - 50) {
                     el.classList.add('active');
                 }
             });
