@@ -34,7 +34,7 @@
             transition: opacity 5s ease;
         }
 
-        #music-picker, #landing, .reveal {
+        #music-picker, .reveal {
             height: 100vh;
             width: 100%;
             display: flex;
@@ -43,28 +43,20 @@
             justify-content: center;
             position: absolute;
             top: 0; left: 0;
-            transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 2.5s cubic-bezier(0.4, 0, 0.2, 1);
             opacity: 0;
             pointer-events: none;
             padding: 20px;
         }
 
-        /* Music Picker visible by default */
-        #music-picker { opacity: 1; pointer-events: all; z-index: 30; }
+        #music-picker { opacity: 1; pointer-events: all; z-index: 20; }
 
         .picker-title {
             letter-spacing: 0.3em;
             text-transform: uppercase;
-            font-size: 0.9rem;
-            margin-bottom: 40px;
+            font-size: 0.8rem;
+            margin-bottom: 30px;
             color: var(--text-dim);
-            text-align: center;
-        }
-
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
         }
 
         .action-btn {
@@ -78,10 +70,7 @@
             backdrop-filter: blur(15px);
             border-radius: 100px;
             transition: all 1s ease;
-        }
-
-        /* Controls button visibility within moments */
-        .reveal .action-btn, #landing .action-btn {
+            margin-top: 20px;
             opacity: 0;
             transform: translateY(20px);
         }
@@ -120,13 +109,12 @@
 
         .caption {
             font-size: 0.85rem;
-            letter-spacing: 0.2em;
+            letter-spacing: 0.3em;
             text-transform: uppercase;
             color: var(--text-dim);
             opacity: 0;
             transition: opacity 2s ease 1s;
             text-align: center;
-            max-width: 80%;
         }
 
         .active .caption { opacity: 1; }
@@ -136,7 +124,6 @@
             letter-spacing: 0.5em;
             text-align: center;
             animation: pulseGlow 4s infinite ease-in-out;
-            margin-bottom: 20px;
         }
 
         @keyframes pulseGlow {
@@ -147,16 +134,7 @@
         .final-buttons {
             display: flex;
             gap: 20px;
-            margin-top: 20px;
-            position: relative;
-            width: 100%;
-            justify-content: center;
-        }
-
-        #no-btn {
-            position: relative;
-            transition: 0.3s ease;
-            z-index: 100;
+            margin-top: 30px;
         }
 
         .active { opacity: 1; pointer-events: all; z-index: 10; }
@@ -168,15 +146,9 @@
     <canvas id="heart-canvas"></canvas>
 
     <div id="music-picker">
-        <p class="picker-title">Which song do you like better?</p>
-        <div class="btn-group">
-            <button class="action-btn show" onclick="selectMusic('boaf.mp3')">Birds of a Feather</button>
-            <button class="action-btn show" onclick="selectMusic('flylove.mp3')">Fly Love</button>
-        </div>
-    </div>
-
-    <div id="landing">
-        <button class="action-btn show" id="start-trigger" onclick="startExperience()">PRESS</button>
+        <p class="picker-title">Pick a song</p>
+        <button class="action-btn show" onclick="startWith('boaf.mp3')">Birds of a Feather</button>
+        <button class="action-btn show" onclick="startWith('flylove.mp3')">Fly Love</button>
     </div>
 
     <div id="moment1" class="reveal">
@@ -207,52 +179,35 @@
 
     <script>
         let audioCtx;
-        let selectedTrack = "";
         const canvas = document.getElementById('heart-canvas');
         const ctx = canvas.getContext('2d');
         let hearts = [];
 
-        function selectMusic(track) {
-            selectedTrack = track;
+        function startWith(track) {
+            // Audio setup
+            const audio = new Audio(track);
+            audio.loop = true;
+            audio.playbackRate = 0.8;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioCtx.createMediaElementSource(audio);
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 280;
+            const gain = audioCtx.createGain();
+            gain.gain.value = 0.6;
+            source.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+            audio.play();
+
+            // Transition
             const picker = document.getElementById('music-picker');
-            picker.style.opacity = '0';
-            picker.style.pointerEvents = 'none';
-            
-            setTimeout(() => {
-                picker.style.display = 'none';
-                const landing = document.getElementById('landing');
-                landing.classList.add('active');
-                document.getElementById('start-trigger').classList.add('show');
-            }, 1000);
-        }
-
-        function startExperience() {
-            try {
-                const audio = new Audio(selectedTrack);
-                audio.loop = true;
-                audio.playbackRate = 0.8;
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const source = audioCtx.createMediaElementSource(audio);
-                const filter = audioCtx.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.frequency.value = 280;
-                const gain = audioCtx.createGain();
-                gain.gain.value = 0.6;
-                source.connect(filter);
-                filter.connect(gain);
-                gain.connect(audioCtx.destination);
-                audio.play();
-            } catch (e) {
-                console.log("Audio play failed, continuing visuals.");
-            }
-
-            const landing = document.getElementById('landing');
-            landing.style.opacity = '0';
-            landing.style.pointerEvents = 'none';
+            picker.classList.remove('active');
+            picker.classList.add('exit');
             
             setTimeout(() => { 
-                landing.style.display = 'none'; 
-                showMoment(1);
+                picker.style.display = 'none'; 
+                showMoment(1); 
             }, 1000);
         }
 
@@ -266,7 +221,7 @@
                     document.getElementById('yes-btn').classList.add('show');
                     document.getElementById('no-btn').classList.add('show');
                     setupNoButton();
-                }, 3000);
+                }, 1000);
             } else {
                 setTimeout(() => {
                     const btn = current.querySelector('.action-btn');
@@ -284,25 +239,22 @@
 
         function setupNoButton() {
             const noBtn = document.getElementById('no-btn');
-            const moveButton = () => {
+            const move = () => {
                 const x = Math.random() * (window.innerWidth - noBtn.offsetWidth);
                 const y = Math.random() * (window.innerHeight - noBtn.offsetHeight);
                 noBtn.style.position = 'fixed';
-                noBtn.style.left = `${x}px`;
-                noBtn.style.top = `${y}px`;
+                noBtn.style.left = x + 'px';
+                noBtn.style.top = y + 'px';
             };
-            noBtn.addEventListener('mouseenter', moveButton);
-            noBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                moveButton();
-            });
+            noBtn.addEventListener('mouseenter', move);
+            noBtn.addEventListener('touchstart', (e) => { e.preventDefault(); move(); });
         }
 
         function celebrate() {
-            const question = document.querySelector('.final-question');
-            question.innerHTML = "I LOVE YOU BEBE ❤️";
-            document.getElementById('no-btn').style.display = 'none';
+            const q = document.querySelector('.final-question');
+            q.innerHTML = "I LOVE YOU BEBE ❤️";
             document.getElementById('yes-btn').style.display = 'none';
+            document.getElementById('no-btn').style.display = 'none';
         }
 
         function startHearts() {
@@ -344,10 +296,8 @@
         }
 
         window.addEventListener('resize', () => {
-            if(hearts.length > 0) {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         });
     </script>
 </body>
