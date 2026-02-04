@@ -22,7 +22,6 @@
             font-family: 'Inter', -apple-system, system-ui, sans-serif;
             overflow-x: hidden;
             line-height: 1.6;
-            /* Added perspective for the scroll animation */
             perspective: 1000px;
         }
 
@@ -76,12 +75,12 @@
             transition: opacity 3s ease;
         }
 
-        /* Enhanced Reveal Animation with Perspective Tilt */
         .reveal {
             opacity: 0;
-            transform: translateY(100px) rotateX(10deg) scale(0.95);
-            transition: all 2.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-            margin-bottom: 300px;
+            transform: translateY(120px) rotateX(10deg) scale(0.95);
+            /* Slower transition for a more cinematic scroll */
+            transition: all 3.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            margin-bottom: 350px;
             width: 100%;
             max-width: 400px;
             text-align: center;
@@ -92,18 +91,16 @@
             transform: translateY(0) rotateX(0deg) scale(1);
         }
 
-        /* Softer Photo Frames */
         .photo-card {
             width: 100%;
             aspect-ratio: 4/5;
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 30px; /* Softer, curved corners */
+            border-radius: 30px;
             overflow: hidden;
             margin-bottom: 40px;
-            /* Soft glow and faded shadow instead of bright outline */
             box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.03);
-            transition: box-shadow 1s ease;
+            transition: box-shadow 1.5s ease;
         }
 
         .reveal.active .photo-card {
@@ -114,7 +111,7 @@
             width: 100%; height: 100%;
             object-fit: cover;
             filter: grayscale(100%) brightness(0.7);
-            transition: filter 2s ease;
+            transition: filter 2.5s ease;
         }
 
         .reveal.active .photo-card img {
@@ -127,7 +124,7 @@
             color: var(--text-dim);
             letter-spacing: 0.3em;
             text-transform: uppercase;
-            transition: color 1.5s ease;
+            transition: color 2s ease;
         }
 
         .reveal.active .caption {
@@ -229,13 +226,15 @@
         function initHearts() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            for(let i = 0; i < 20; i++) {
+            // Increased heart count
+            for(let i = 0; i < 60; i++) {
                 hearts.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height + canvas.height,
-                    size: Math.random() * 8 + 4,
-                    speed: Math.random() * 0.5 + 0.2,
-                    opacity: Math.random() * 0.3
+                    size: Math.random() * 10 + 5,
+                    // Faster speed
+                    speed: Math.random() * 2 + 1,
+                    opacity: Math.random() * 0.4
                 });
             }
         }
@@ -245,11 +244,14 @@
             ctx.beginPath();
             ctx.translate(x, y);
             ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-            ctx.moveTo(0, 0);
-            ctx.bezierCurveTo(0, -3, -5, -10, -size / 2, -size / 2);
-            ctx.bezierCurveTo(-size, 0, 0, size / 1.5, 0, size);
-            ctx.bezierCurveTo(0, size / 1.5, size, 0, size / 2, -size / 2);
-            ctx.bezierCurveTo(5, -10, 0, -3, 0, 0);
+            
+            // Adjusted bezier curves to fix "stretched" look
+            ctx.moveTo(0, size / 4);
+            ctx.bezierCurveTo(0, 0, -size / 2, 0, -size / 2, size / 2);
+            ctx.bezierCurveTo(-size / 2, size, 0, size * 1.25, 0, size * 1.5);
+            ctx.bezierCurveTo(0, size * 1.25, size / 2, size, size / 2, size / 2);
+            ctx.bezierCurveTo(size / 2, 0, 0, 0, 0, size / 4);
+            
             ctx.fill();
             ctx.restore();
         }
@@ -258,7 +260,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             hearts.forEach(h => {
                 h.y -= h.speed;
-                if(h.y < -50) h.y = canvas.height + 50;
+                if(h.y < -100) h.y = canvas.height + 100;
                 drawHeart(h.x, h.y, h.size, h.opacity);
             });
             requestAnimationFrame(animate);
@@ -268,7 +270,6 @@
             const reveals = document.querySelectorAll('.reveal');
             reveals.forEach(el => {
                 const rect = el.getBoundingClientRect();
-                // Trigger earlier for a smoother flow
                 if (rect.top < window.innerHeight - 50) {
                     el.classList.add('active');
                 }
@@ -276,6 +277,11 @@
         }
 
         window.addEventListener('scroll', revealOnScroll);
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
     </script>
 </body>
 </html>
