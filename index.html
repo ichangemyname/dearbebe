@@ -22,7 +22,6 @@
             font-family: 'Inter', -apple-system, system-ui, sans-serif;
             overflow: hidden; 
             line-height: 1.6;
-            perspective: 1000px;
         }
 
         #heart-canvas {
@@ -32,7 +31,7 @@
             pointer-events: none;
             z-index: 0;
             opacity: 0;
-            transition: opacity 4s ease;
+            transition: opacity 5s ease; /* Very slow fade in for the hearts */
         }
 
         #landing, .reveal {
@@ -50,7 +49,6 @@
             padding: 20px;
         }
 
-        /* Ensure landing is visible at start */
         #landing { opacity: 1; pointer-events: all; z-index: 20; }
 
         .action-btn {
@@ -69,10 +67,7 @@
             transform: translateY(20px);
         }
 
-        .action-btn.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        .action-btn.show { opacity: 1; transform: translateY(0); }
 
         .action-btn:hover {
             border-color: var(--text-main);
@@ -109,7 +104,6 @@
             letter-spacing: 0.3em;
             text-transform: uppercase;
             color: var(--text-dim);
-            text-align: center;
             opacity: 0;
             transition: opacity 2s ease 1s;
         }
@@ -118,15 +112,18 @@
 
         .final-question {
             font-size: 1.8rem;
-            letter-spacing: 0.4em;
-            text-shadow: 0 0 20px var(--glow);
+            letter-spacing: 0.5em;
             text-align: center;
+            animation: pulseGlow 4s infinite ease-in-out;
         }
 
-        /* Navigation Classes */
+        @keyframes pulseGlow {
+            0%, 100% { text-shadow: 0 0 10px rgba(255,255,255,0.2); opacity: 0.8; }
+            50% { text-shadow: 0 0 30px rgba(255,255,255,0.6); opacity: 1; }
+        }
+
         .active { opacity: 1; pointer-events: all; z-index: 10; }
         .exit { opacity: 0; transform: translateY(-80px) scale(1.1); pointer-events: none; }
-
     </style>
 </head>
 <body>
@@ -166,7 +163,6 @@
         let hearts = [];
 
         function startExperience() {
-            // Audio setup
             const audio = new Audio("boaf.mp3");
             audio.loop = true;
             audio.playbackRate = 0.8;
@@ -182,17 +178,10 @@
             gain.connect(audioCtx.destination);
             audio.play();
 
-            // Clear Landing and Start Visuals
             const landing = document.getElementById('landing');
             landing.classList.remove('active');
             landing.classList.add('exit');
-            
-            // This prevents the "Press" button from lingering
             setTimeout(() => { landing.style.display = 'none'; }, 2000);
-
-            canvas.style.opacity = '1';
-            initHearts();
-            animate();
 
             setTimeout(() => { showMoment(1); }, 1000);
         }
@@ -201,36 +190,39 @@
             const current = document.getElementById(`moment${n}`);
             current.classList.add('active');
             
-            // Slow fade in for the button (4 second delay for maximum emotional impact)
-            setTimeout(() => {
-                const btn = current.querySelector('.action-btn');
-                if(btn) btn.classList.add('show');
-            }, 4000);
+            // If it's the last moment (Be Mine), start the hearts
+            if (n === 4) {
+                startHearts();
+            } else {
+                setTimeout(() => {
+                    const btn = current.querySelector('.action-btn');
+                    if(btn) btn.classList.add('show');
+                }, 4000);
+            }
         }
 
         function nextMoment(n) {
             const current = document.getElementById(`moment${n}`);
             current.classList.remove('active');
             current.classList.add('exit');
-            
-            setTimeout(() => {
-                showMoment(n + 1);
-            }, 1500);
+            setTimeout(() => { showMoment(n + 1); }, 1500);
         }
 
-        // --- Slow, Beautiful Hearts ---
-        function initHearts() {
+        function startHearts() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            for(let i = 0; i < 45; i++) {
+            canvas.style.opacity = '1';
+            
+            for(let i = 0; i < 50; i++) {
                 hearts.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height + canvas.height,
-                    size: Math.random() * 10 + 6,
-                    speed: Math.random() * 0.3 + 0.15, // Extremely slow drift
-                    opacity: Math.random() * 0.25 + 0.05
+                    size: Math.random() * 15 + 10,
+                    speed: Math.random() * 0.4 + 0.2,
+                    opacity: Math.random() * 0.3 + 0.1
                 });
             }
+            animate();
         }
 
         function drawHeart(x, y, size, opacity) {
@@ -238,16 +230,12 @@
             ctx.translate(x, y);
             ctx.beginPath();
             ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-            // Smoother heart path
-            ctx.moveTo(0, size / 4);
-            ctx.quadraticCurveTo(0, 0, size / 2, 0);
-            ctx.quadraticCurveTo(size, 0, size, size / 2);
-            ctx.quadraticCurveTo(size, size * 0.75, size / 2, size);
-            ctx.lineTo(0, size * 1.4);
-            ctx.lineTo(-size / 2, size);
-            ctx.quadraticCurveTo(-size, size * 0.75, -size, size / 2);
-            ctx.quadraticCurveTo(-size, 0, -size / 2, 0);
-            ctx.quadraticCurveTo(0, 0, 0, size / 4);
+            
+            // Re-engineered heart path for reliability
+            ctx.moveTo(0, 0);
+            ctx.bezierCurveTo(-size / 2, -size / 2, -size, size / 3, 0, size);
+            ctx.bezierCurveTo(size, size / 3, size / 2, -size / 2, 0, 0);
+            
             ctx.fill();
             ctx.restore();
         }
@@ -263,8 +251,10 @@
         }
 
         window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            if(hearts.length > 0) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
         });
     </script>
 </body>
