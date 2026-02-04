@@ -4,66 +4,35 @@
     <meta charset="UTF-8">
     <title>dearbebe</title>
     <style>
-        body { background: #000; margin: 0; height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; cursor: crosshair; color: #222; font-family: monospace; }
-        #links { display: none; color: white; text-align: center; }
-        a { color: white; display: block; margin: 20px; text-decoration: none; border: 1px solid white; padding: 10px; width: 200px; }
+        /* Makes the entire screen black */
+        body { 
+            background-color: #000; 
+            margin: 0; 
+            height: 100vh; 
+            width: 100vw; 
+            overflow: hidden; 
+            cursor: crosshair; 
+        }
     </style>
 </head>
 <body>
 
-    <div id="ui">
-        <div id="msg">CLICK TO UNLOCK</div>
-        <div id="links">
-            <a href="https://yourlink1.com">LINK ONE</a>
-            <a href="https://yourlink2.com">LINK TWO</a>
-        </div>
-    </div>
+    <audio id="vibe" src="boaf.mp3" loop></audio>
 
     <script>
-        let audioCtx;
-        let source;
-        let isStarted = false;
+        const song = document.getElementById('vibe');
+        let isPlaying = false;
 
-        async function startVibe() {
-            if (isStarted) return;
-            isStarted = true;
-
-            // 1. UI Changes
-            document.getElementById('msg').style.display = 'none';
-            document.getElementById('links').style.display = 'block';
-
-            // 2. Setup Audio Context
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            
-            // 3. Fetch the audio as "Data" so the browser can't auto-play it
-            const response = await fetch('boaf.mp3');
-            const arrayBuffer = await response.arrayBuffer();
-            const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-
-            // 4. Create the play node
-            source = audioCtx.createBufferSource();
-            source.buffer = audioBuffer;
-            source.loop = true;
-            source.playbackRate.value = 0.82;
-
-            // 5. The Muffle Filter
-            const muffle = audioCtx.createBiquadFilter();
-            muffle.type = 'lowpass';
-            muffle.frequency.value = 250;
-
-            const gain = audioCtx.createGain();
-            gain.gain.value = 0.5;
-
-            // 6. The Cleanest Routing Possible
-            source.connect(muffle);
-            muffle.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            // 7. Start
-            source.start(0);
+        // One simple function: if it's not playing, start it.
+        function start() {
+            if (!isPlaying) {
+                song.play();
+                isPlaying = true;
+            }
         }
 
-        window.addEventListener('click', startVibe);
+        // Click anywhere to trigger the sound
+        window.addEventListener('click', start);
     </script>
 </body>
 </html>
