@@ -2,22 +2,244 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>dearbebe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For You</title>
     <style>
-        body { background: #000; margin: 0; height: 100vh; overflow: hidden; }
+        :root {
+            --bg: #0a0a0a;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+            --glow: rgba(255, 255, 255, 0.6);
+            --text-main: #ffffff;
+            --text-dim: #888888;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Floating Hearts Canvas */
+        #heart-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 3s ease;
+        }
+
+        /* Initial Landing */
+        #landing {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            position: relative;
+            transition: opacity 1.5s ease;
+        }
+
+        .press-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 18px 45px;
+            letter-spacing: 0.3em;
+            font-weight: 200;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .press-btn:hover {
+            border-color: var(--text-main);
+            box-shadow: 0 0 25px var(--border);
+            transform: scale(1.02);
+        }
+
+        /* Main Story Layout */
+        #story {
+            display: none;
+            opacity: 0;
+            flex-direction: column;
+            align-items: center;
+            padding: 100px 20px 200px 20px;
+            z-index: 5;
+            position: relative;
+            transition: opacity 2s ease;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            margin-bottom: 200px;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Modern UI Elements */
+        .photo-card {
+            width: 100%;
+            aspect-ratio: 4/5;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            margin-bottom: 30px;
+        }
+
+        .photo-card img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%); /* Keeps it monochrome */
+            transition: filter 1s ease;
+        }
+
+        .photo-card:hover img {
+            filter: grayscale(0%); /* Subtle color peek on hover if desired */
+        }
+
+        .caption {
+            font-size: 1.1rem;
+            font-weight: 200;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+        }
+
+        .final-question {
+            font-size: 2.2rem;
+            font-weight: 200;
+            letter-spacing: 0.1em;
+            margin-top: 100px;
+            text-align: center;
+            text-shadow: 0 0 20px var(--glow);
+        }
     </style>
 </head>
 <body>
 
-    <script>
-        // We create the audio entirely in the background
-        const audio = new Audio("boaf.mp3");
-        audio.loop = true;
+    <canvas id="heart-canvas"></canvas>
 
-        window.onclick = function() {
-            console.log("Click detected. Starting audio...");
-            audio.play();
-        };
+    <div id="landing">
+        <button class="press-btn" onclick="startExperience()">PRESS</button>
+    </div>
+
+    <div id="story">
+        <div class="reveal">
+            <div class="photo-card">
+                <img src="photo1.jpg" alt="Memory 1">
+            </div>
+            <p class="caption">A moment frozen in time.</p>
+        </div>
+
+        <div class="reveal">
+            <div class="photo-card">
+                <img src="photo2.jpg" alt="Memory 2">
+            </div>
+            <p class="caption">The quietest places are loudest with you.</p>
+        </div>
+
+        <div class="reveal">
+            <h1 class="final-question">Be mine?</h1>
+        </div>
+    </div>
+
+    <audio id="bgm" src="boaf.mp3" loop></audio>
+
+    <script>
+        const canvas = document.getElementById('heart-canvas');
+        const ctx = canvas.getContext('2d');
+        let hearts = [];
+
+        function startExperience() {
+            document.getElementById('bgm').play();
+            document.getElementById('landing').style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('landing').style.display = 'none';
+                const story = document.getElementById('story');
+                story.style.display = 'flex';
+                canvas.style.opacity = '1';
+                
+                setTimeout(() => {
+                    story.style.opacity = '1';
+                    initHearts();
+                    animate();
+                    revealOnScroll();
+                }, 100);
+            }, 1500);
+        }
+
+        // --- Floating Hearts System ---
+        function initHearts() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            for(let i = 0; i < 25; i++) {
+                hearts.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height + canvas.height,
+                    size: Math.random() * 15 + 5,
+                    speed: Math.random() * 1 + 0.5,
+                    opacity: Math.random() * 0.5
+                });
+            }
+        }
+
+        function drawHeart(x, y, size, opacity) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.translate(x, y);
+            ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+            ctx.moveTo(0, 0);
+            ctx.bezierCurveTo(0, -3, -5, -15, -size / 2, -size / 2);
+            ctx.bezierCurveTo(-size, 0, 0, size / 1.5, 0, size);
+            ctx.bezierCurveTo(0, size / 1.5, size, 0, size / 2, -size / 2);
+            ctx.bezierCurveTo(5, -15, 0, -3, 0, 0);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            hearts.forEach(h => {
+                h.y -= h.speed;
+                if(h.y < -50) h.y = canvas.height + 50;
+                drawHeart(h.x, h.y, h.size, h.opacity);
+            });
+            requestAnimationFrame(animate);
+        }
+
+        // --- Scroll Reveal System ---
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll('.reveal');
+            reveals.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight - 150) {
+                    el.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', revealOnScroll);
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
     </script>
 </body>
 </html>
