@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Warehouse</title>
+    <style>
+        body { background: #000; margin: 0; height: 100vh; width: 100vw; overflow: hidden; }
+    </style>
+</head>
+<body>
+
+    <audio id="myAudio" loop>
+        <source src="boaf.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const audio = document.getElementById('myAudio');
+        let audioCtx;
+
+        function startVibe() {
+            if (audioCtx) return;
+
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // This is the "Compatibility" change:
+            // We create a "MediaElement" source which is less restricted
+            const source = audioCtx.createMediaElementSource(audio);
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 250; 
+
+            const delay = audioCtx.createDelay();
+            delay.delayTime.value = 0.7; 
+            const feedback = audioCtx.createGain();
+            feedback.gain.value = 0.5; 
+
+            const volume = audioCtx.createGain();
+            volume.gain.value = 0.4; 
+            audio.playbackRate = 0.82; 
+
+            source.connect(filter);
+            filter.connect(delay);
+            delay.connect(feedback);
+            feedback.connect(delay);
+            filter.connect(volume);
+            delay.connect(volume);
+            volume.connect(audioCtx.destination);
+
+            audio.play();
+        }
+
+        window.addEventListener('click', startVibe);
+    </script>
+</body>
+</html>
