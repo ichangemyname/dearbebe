@@ -49,7 +49,7 @@
             padding: 20px;
         }
 
-        #landing { opacity: 1; pointer-events: all; z-index: 20; }
+        #landing { opacity: 1; pointer-events: all; z-index: 20; transition: opacity 1s ease; }
 
         .action-btn {
             background: none;
@@ -201,11 +201,13 @@
             audio.play();
 
             const landing = document.getElementById('landing');
-            landing.classList.remove('active');
-            landing.classList.add('exit');
-            setTimeout(() => { landing.style.display = 'none'; }, 2000);
-
-            setTimeout(() => { showMoment(1); }, 1000);
+            landing.style.opacity = '0';
+            landing.style.pointerEvents = 'none';
+            
+            setTimeout(() => { 
+                landing.style.display = 'none'; 
+                showMoment(1);
+            }, 1000);
         }
 
         function showMoment(n) {
@@ -214,7 +216,6 @@
             
             if (n === 4) {
                 startHearts();
-                // Show Yes/No buttons
                 setTimeout(() => {
                     document.getElementById('yes-btn').classList.add('show');
                     document.getElementById('no-btn').classList.add('show');
@@ -249,7 +250,7 @@
 
             noBtn.addEventListener('mouseenter', moveButton);
             noBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // Prevents clicking on mobile
+                e.preventDefault();
                 moveButton();
             });
         }
