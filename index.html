@@ -2,55 +2,89 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Warehouse</title>
+    <title>dearbebe</title>
     <style>
-        body { background: #000; margin: 0; height: 100vh; width: 100vw; overflow: hidden; }
+        body { 
+            background: #000; 
+            margin: 0; 
+            height: 100vh; 
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: crosshair;
+            color: white;
+            font-family: sans-serif;
+        }
+        /* Buttons stay hidden until you click to start */
+        #content { opacity: 0; transition: opacity 2s; text-align: center; }
+        .link-btn {
+            display: block;
+            margin: 10px;
+            padding: 10px 20px;
+            border: 1px solid white;
+            color: white;
+            text-decoration: none;
+            width: 200px;
+        }
     </style>
 </head>
 <body>
 
-    <audio id="myAudio" loop>
-        <source src="boaf.mp3" type="audio/mpeg">
-    </audio>
+    <div id="start-msg">CLICK TO ENTER</div>
+
+    <div id="content">
+        <a href="#" class="link-btn">LINK 1</a>
+        <a href="#" class="link-btn">LINK 2</a>
+    </div>
 
     <script>
-        const audio = document.getElementById('myAudio');
         let audioCtx;
+        let isRunning = false; // THE LOCK
 
-        function startVibe() {
-            if (audioCtx) return;
+        async function initWarehouse() {
+            if (isRunning) return; // Physically stops a second instance
+            isRunning = true;
 
+            // Hide the start message and show content
+            document.getElementById('start-msg').style.display = 'none';
+            document.getElementById('content').style.opacity = '1';
+
+            // 1. Create the Audio Object purely in Javascript (No HTML tag)
+            const audio = new Audio("boaf.mp3");
+            audio.loop = true;
+            audio.crossOrigin = "anonymous";
+            audio.playbackRate = 0.82;
+
+            // 2. Setup Audio Engine
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            
-            // This is the "Compatibility" change:
-            // We create a "MediaElement" source which is less restricted
             const source = audioCtx.createMediaElementSource(audio);
-
+            
             const filter = audioCtx.createBiquadFilter();
             filter.type = 'lowpass';
             filter.frequency.value = 250; 
 
-            const delay = audioCtx.createDelay();
-            delay.delayTime.value = 0.7; 
-            const feedback = audioCtx.createGain();
-            feedback.gain.value = 0.5; 
-
             const volume = audioCtx.createGain();
-            volume.gain.value = 0.4; 
-            audio.playbackRate = 0.82; 
+            volume.gain.value = 0.5;
 
+            // 3. Connect the single path
             source.connect(filter);
-            filter.connect(delay);
-            delay.connect(feedback);
-            feedback.connect(delay);
             filter.connect(volume);
-            delay.connect(volume);
             volume.connect(audioCtx.destination);
 
-            audio.play();
+            // 4. Play
+            try {
+                await audio.play();
+                console.log("Warehouse vibe active.");
+            } catch (err) {
+                console.error("Audio failed:", err);
+                isRunning = false; // Reset lock so user can try clicking again
+            }
         }
 
-        window.addEventListener('click', startVibe);
+        // Listen for the first click only
+        window.addEventListener('click', initWarehouse);
     </script>
 </body>
 </html>
