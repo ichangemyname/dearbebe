@@ -6,12 +6,12 @@
     <title>For You</title>
     <style>
         :root {
-            --bg: #0a0a0a;
-            --card-bg: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.1);
-            --glow: rgba(255, 255, 255, 0.6);
+            --bg: #000000;
+            --card-bg: rgba(255, 255, 255, 0.02);
+            --border: rgba(255, 255, 255, 0.08);
+            --glow: rgba(255, 255, 255, 0.5);
             --text-main: #ffffff;
-            --text-dim: #888888;
+            --text-dim: #666666;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -19,12 +19,11 @@
         body {
             background-color: var(--bg);
             color: var(--text-main);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
             overflow-x: hidden;
             line-height: 1.6;
         }
 
-        /* Floating Hearts Canvas */
         #heart-canvas {
             position: fixed;
             top: 0; left: 0;
@@ -32,10 +31,9 @@
             pointer-events: none;
             z-index: 0;
             opacity: 0;
-            transition: opacity 3s ease;
+            transition: opacity 4s ease;
         }
 
-        /* Initial Landing */
         #landing {
             height: 100vh;
             display: flex;
@@ -50,40 +48,40 @@
             background: none;
             border: 1px solid var(--border);
             color: var(--text-main);
-            padding: 18px 45px;
-            letter-spacing: 0.3em;
+            padding: 20px 50px;
+            letter-spacing: 0.4em;
             font-weight: 200;
             cursor: pointer;
-            backdrop-filter: blur(10px);
-            border-radius: 50px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(15px);
+            border-radius: 100px;
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .press-btn:hover {
             border-color: var(--text-main);
-            box-shadow: 0 0 25px var(--border);
-            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(255,255,255,0.1);
+            letter-spacing: 0.5em;
         }
 
-        /* Main Story Layout */
         #story {
             display: none;
             opacity: 0;
             flex-direction: column;
             align-items: center;
-            padding: 100px 20px 200px 20px;
+            padding: 150px 20px 250px 20px;
             z-index: 5;
             position: relative;
-            transition: opacity 2s ease;
+            transition: opacity 3s ease;
         }
 
         .reveal {
             opacity: 0;
-            transform: translateY(40px);
-            transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-            margin-bottom: 200px;
+            transform: translateY(60px);
+            transition: all 2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            margin-bottom: 250px;
             width: 100%;
-            max-width: 450px;
+            max-width: 400px;
+            text-align: center;
         }
 
         .reveal.active {
@@ -91,43 +89,43 @@
             transform: translateY(0);
         }
 
-        /* Modern UI Elements */
         .photo-card {
             width: 100%;
             aspect-ratio: 4/5;
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 24px;
+            border-radius: 4px; /* Sharper, more modern edges */
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
         }
 
         .photo-card img {
             width: 100%; height: 100%;
             object-fit: cover;
-            filter: grayscale(100%); /* Keeps it monochrome */
-            transition: filter 1s ease;
+            filter: grayscale(100%) brightness(0.8);
+            transition: filter 1.5s ease;
         }
 
-        .photo-card:hover img {
-            filter: grayscale(0%); /* Subtle color peek on hover if desired */
+        .reveal.active .photo-card img {
+            filter: grayscale(100%) brightness(1);
         }
 
         .caption {
-            font-size: 1.1rem;
-            font-weight: 200;
+            font-size: 0.9rem;
+            font-weight: 300;
             color: var(--text-dim);
-            letter-spacing: 0.05em;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
         }
 
         .final-question {
-            font-size: 2.2rem;
+            font-size: 1.5rem;
             font-weight: 200;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.3em;
             margin-top: 100px;
-            text-align: center;
-            text-shadow: 0 0 20px var(--glow);
+            text-transform: uppercase;
+            text-shadow: 0 0 15px var(--glow);
         }
     </style>
 </head>
@@ -142,16 +140,16 @@
     <div id="story">
         <div class="reveal">
             <div class="photo-card">
-                <img src="photo1.jpg" alt="Memory 1">
+                <img src="photo1.jpg" alt="">
             </div>
-            <p class="caption">A moment frozen in time.</p>
+            <p class="caption">The start of us</p>
         </div>
 
         <div class="reveal">
             <div class="photo-card">
-                <img src="photo2.jpg" alt="Memory 2">
+                <img src="photo2.jpg" alt="">
             </div>
-            <p class="caption">The quietest places are loudest with you.</p>
+            <p class="caption">My favorite silence</p>
         </div>
 
         <div class="reveal">
@@ -159,15 +157,38 @@
         </div>
     </div>
 
-    <audio id="bgm" src="boaf.mp3" loop></audio>
-
     <script>
+        let audioCtx;
+        let isStarted = false;
         const canvas = document.getElementById('heart-canvas');
         const ctx = canvas.getContext('2d');
         let hearts = [];
 
-        function startExperience() {
-            document.getElementById('bgm').play();
+        async function startExperience() {
+            if (isStarted) return;
+            isStarted = true;
+
+            // --- THE MUFFLED AUDIO ENGINE ---
+            const audio = new Audio("boaf.mp3");
+            audio.loop = true;
+            audio.playbackRate = 0.82; // Slowed effect
+
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioCtx.createMediaElementSource(audio);
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 250; // Muffled effect
+
+            const gain = audioCtx.createGain();
+            gain.gain.value = 0.5;
+
+            source.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            audio.play();
+
+            // --- UI TRANSITION ---
             document.getElementById('landing').style.opacity = '0';
             
             setTimeout(() => {
@@ -185,17 +206,17 @@
             }, 1500);
         }
 
-        // --- Floating Hearts System ---
+        // --- Hearts Logic ---
         function initHearts() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            for(let i = 0; i < 25; i++) {
+            for(let i = 0; i < 20; i++) {
                 hearts.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height + canvas.height,
-                    size: Math.random() * 15 + 5,
-                    speed: Math.random() * 1 + 0.5,
-                    opacity: Math.random() * 0.5
+                    size: Math.random() * 8 + 4,
+                    speed: Math.random() * 0.5 + 0.2,
+                    opacity: Math.random() * 0.3
                 });
             }
         }
@@ -206,10 +227,10 @@
             ctx.translate(x, y);
             ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
             ctx.moveTo(0, 0);
-            ctx.bezierCurveTo(0, -3, -5, -15, -size / 2, -size / 2);
+            ctx.bezierCurveTo(0, -3, -5, -10, -size / 2, -size / 2);
             ctx.bezierCurveTo(-size, 0, 0, size / 1.5, 0, size);
             ctx.bezierCurveTo(0, size / 1.5, size, 0, size / 2, -size / 2);
-            ctx.bezierCurveTo(5, -15, 0, -3, 0, 0);
+            ctx.bezierCurveTo(5, -10, 0, -3, 0, 0);
             ctx.fill();
             ctx.restore();
         }
@@ -224,22 +245,18 @@
             requestAnimationFrame(animate);
         }
 
-        // --- Scroll Reveal System ---
+        // --- Scroll Reveal ---
         function revealOnScroll() {
             const reveals = document.querySelectorAll('.reveal');
             reveals.forEach(el => {
                 const rect = el.getBoundingClientRect();
-                if (rect.top < window.innerHeight - 150) {
+                if (rect.top < window.innerHeight - 100) {
                     el.classList.add('active');
                 }
             });
         }
 
         window.addEventListener('scroll', revealOnScroll);
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
     </script>
 </body>
 </html>
