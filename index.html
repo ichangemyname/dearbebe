@@ -43,13 +43,13 @@
             justify-content: center;
             position: absolute;
             top: 0; left: 0;
-            transition: all 2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
             opacity: 0;
             pointer-events: none;
             padding: 20px;
         }
 
-        /* Initial Screen */
+        /* Music Picker visible by default */
         #music-picker { opacity: 1; pointer-events: all; z-index: 30; }
 
         .picker-title {
@@ -78,6 +78,10 @@
             backdrop-filter: blur(15px);
             border-radius: 100px;
             transition: all 1s ease;
+        }
+
+        /* Controls button visibility within moments */
+        .reveal .action-btn, #landing .action-btn {
             opacity: 0;
             transform: translateY(20px);
         }
@@ -116,7 +120,7 @@
 
         .caption {
             font-size: 0.85rem;
-            letter-spacing: 0.3em;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
             color: var(--text-dim);
             opacity: 0;
@@ -166,13 +170,13 @@
     <div id="music-picker">
         <p class="picker-title">Which song do you like better?</p>
         <div class="btn-group">
-            <button class="action-btn show" onclick="selectMusic('boaf.mp3')">Birds of a Feather - Billie Eilish</button>
-            <button class="action-btn show" onclick="selectMusic('flylove.mp3')">Fly Love - Jamie Foxx</button>
+            <button class="action-btn show" onclick="selectMusic('boaf.mp3')">Birds of a Feather</button>
+            <button class="action-btn show" onclick="selectMusic('flylove.mp3')">Fly Love</button>
         </div>
     </div>
 
     <div id="landing">
-        <button class="action-btn show" onclick="startExperience()">PRESS</button>
+        <button class="action-btn show" id="start-trigger" onclick="startExperience()">PRESS</button>
     </div>
 
     <div id="moment1" class="reveal">
@@ -216,25 +220,31 @@
             
             setTimeout(() => {
                 picker.style.display = 'none';
-                document.getElementById('landing').classList.add('active');
+                const landing = document.getElementById('landing');
+                landing.classList.add('active');
+                document.getElementById('start-trigger').classList.add('show');
             }, 1000);
         }
 
         function startExperience() {
-            const audio = new Audio(selectedTrack);
-            audio.loop = true;
-            audio.playbackRate = 0.8;
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const source = audioCtx.createMediaElementSource(audio);
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.value = 280;
-            const gain = audioCtx.createGain();
-            gain.gain.value = 0.6;
-            source.connect(filter);
-            filter.connect(gain);
-            gain.connect(audioCtx.destination);
-            audio.play();
+            try {
+                const audio = new Audio(selectedTrack);
+                audio.loop = true;
+                audio.playbackRate = 0.8;
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioCtx.createMediaElementSource(audio);
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 280;
+                const gain = audioCtx.createGain();
+                gain.gain.value = 0.6;
+                source.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                audio.play();
+            } catch (e) {
+                console.log("Audio play failed, continuing visuals.");
+            }
 
             const landing = document.getElementById('landing');
             landing.style.opacity = '0';
