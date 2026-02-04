@@ -4,58 +4,63 @@
     <meta charset="UTF-8">
     <title>dearbebe</title>
     <style>
-        body { 
-            background: #000; 
-            margin: 0; 
-            height: 100vh; 
-            width: 100vw;
-            display: flex;
-            align-items: center; 
-            justify-content: center; 
-            cursor: crosshair;
-            color: #111; /* Text is almost invisible black */
-            font-family: monospace;
-        }
+        body { background: #000; margin: 0; height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; cursor: crosshair; color: #222; font-family: monospace; }
+        #links { display: none; color: white; text-align: center; }
+        a { color: white; display: block; margin: 20px; text-decoration: none; border: 1px solid white; padding: 10px; width: 200px; }
     </style>
 </head>
 <body>
 
-    <div id="status">CLICK TO ENTER</div>
+    <div id="ui">
+        <div id="msg">CLICK TO UNLOCK</div>
+        <div id="links">
+            <a href="https://yourlink1.com">LINK ONE</a>
+            <a href="https://yourlink2.com">LINK TWO</a>
+        </div>
+    </div>
 
     <script>
         let audioCtx;
+        let source;
         let isStarted = false;
 
         async function startVibe() {
-            if (isStarted) return; // Hard lock to prevent double-play
+            if (isStarted) return;
             isStarted = true;
 
-            document.getElementById('status').style.display = 'none';
+            // 1. UI Changes
+            document.getElementById('msg').style.display = 'none';
+            document.getElementById('links').style.display = 'block';
 
-            // 1. Create the audio source
-            const audio = new Audio("boaf.mp3");
-            audio.loop = true;
-            audio.playbackRate = 0.82; // Keep it slowed down
-
-            // 2. Initialize the Audio Engine
+            // 2. Setup Audio Context
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const source = audioCtx.createMediaElementSource(audio);
+            
+            // 3. Fetch the audio as "Data" so the browser can't auto-play it
+            const response = await fetch('boaf.mp3');
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
-            // 3. THE MUFFLE (Low Pass Filter)
-            // This is the ONLY effect. No echo, no delay.
+            // 4. Create the play node
+            source = audioCtx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.loop = true;
+            source.playbackRate.value = 0.82;
+
+            // 5. The Muffle Filter
             const muffle = audioCtx.createBiquadFilter();
             muffle.type = 'lowpass';
-            muffle.frequency.value = 250; 
+            muffle.frequency.value = 250;
 
-            const volume = audioCtx.createGain();
-            volume.gain.value = 0.6;
+            const gain = audioCtx.createGain();
+            gain.gain.value = 0.5;
 
-            // 4. THE ROUTING (Straight line: Source -> Muffle -> Volume -> Speakers)
+            // 6. The Cleanest Routing Possible
             source.connect(muffle);
-            muffle.connect(volume);
-            volume.connect(audioCtx.destination);
+            muffle.connect(gain);
+            gain.connect(audioCtx.destination);
 
-            await audio.play();
+            // 7. Start
+            source.start(0);
         }
 
         window.addEventListener('click', startVibe);
